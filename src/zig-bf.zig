@@ -1,14 +1,10 @@
 const std = @import("std");
 const util = @import("util.zig");
+const Interpreter = @import("interpreter.zig").Interpreter;
 const fs = std.fs;
 const Allocator = std.mem.Allocator;
 
 const MAX_FILE_SIZE_IN_BYTES = 0x40000000; // 1 GB
-
-
-pub const Parser = struct
-{
-};
 
 pub fn main() void
 {    
@@ -39,7 +35,9 @@ pub fn main() void
         return;
     };
     
-    std.debug.print("{s}",.{contents});
+    var bf_interpreter: Interpreter = Interpreter.init(contents, allocator);
+
+    bf_interpreter.run();
 }
 
 pub fn OpenFileFromPath(filepath: []u8 ) ?fs.File
