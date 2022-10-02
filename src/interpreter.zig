@@ -20,7 +20,11 @@ pub const Interpreter = struct
         result.countLineLengths();
 
         return result;
-        
+    }
+
+    pub fn deinitinit(self: Interpreter) void
+    {
+        self.list.deinit();
     }
 
     fn countLineLengths(self: Interpreter) void
