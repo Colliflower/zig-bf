@@ -127,23 +127,64 @@ pub const Interpreter = struct
             }
             else
             {
-                return null;
+                return location;
             }
         }
 
-        return location;
+        return null;
     }
 };
 
 const testing = std.testing;
 const test_allocator = testing.allocator;
 
+
+test "Interpreter Init" {
+    const test_str = "abc\ndef\n";
+    var test_interpreter = Interpreter.init(test_str, test_allocator);
+    defer test_interpreter.deinit();
+    try testing.expect(test_interpreter.lineLengths.items.len == 2);
+    try testing.expect(test_interpreter.lineLengths.items[0] == 4);
+    try testing.expect(test_interpreter.lineLengths.items[1] == 4);
+}
+
 test "Interpreter getFileLocation" {
     const test_str = "abc\ndef\n";
     var test_interpreter = Interpreter.init(test_str, test_allocator);
     defer test_interpreter.deinit();
-    const location = test_interpreter.getFileLocation(0);
-    try testing.expect(location != null);
-    try testing.expect(location.?.line == 0);
-    try testing.expect(location.?.column == 0);
+
+    const columns = [_]u32{0, 1, 2, 3, 0, 1, 2, 3};
+    const lines = [_]u32{0, 0, 0, 0, 1, 1, 1, 1};
+    try testing.expect(columns.len == lines.len);
+    
+    
+    var i:u32 = 0;
+    while(i < test_str.len) :  (i+= 1)
+    {
+        const location = test_interpreter.getFileLocation(i);
+        var failed = false;
+        testing.expect(location != null) catch {
+            failed = true;
+        };
+        testing.expect(location.?.line ==  lines[i]) catch {
+            failed = true;
+        };
+        testing.expect(location.?.column == columns[i]) catch {
+            failed = true;
+        };
+
+        if (!failed)
+        {
+            continue;
+        }
+        
+        if (location == null)
+        {
+            std.debug.print("ix {d} \"{c}\" => null\n", .{i, test_str[i]});
+        }
+        else
+        {
+            std.debug.print("ix {d} \"{c}\" => line: {d} column: {d}\n", .{i, test_str[i], location.?.line, location.?.column});
+        }
+    }
 }
