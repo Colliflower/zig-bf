@@ -22,12 +22,12 @@ pub const Interpreter = struct
         return result;
     }
 
-    pub fn deinitinit(self: Interpreter) void
+    pub fn deinit(self: *Interpreter) void
     {
-        self.list.deinit();
+        self.lineLengths.deinit();
     }
 
-    fn countLineLengths(self: Interpreter) void
+    fn countLineLengths(self: *Interpreter) void
     {
         assert(self.lineLengths.items.len == 0);
         var currLength: u32 = 0;
@@ -37,7 +37,7 @@ pub const Interpreter = struct
 
             if (char == '\n')
             {
-                try self.lineLengths.append(currLength) catch |err|
+                self.lineLengths.append(currLength) catch |err|
                 {
                     std.debug.print("Unable to allocate memory for line {d} {s}\n",.{self.lineLengths.items.len, err});
                 };
@@ -47,14 +47,14 @@ pub const Interpreter = struct
         
         if (currLength > 0)
         {
-            try self.lineLengths.append(currLength) catch |err|
+            self.lineLengths.append(currLength) catch |err|
             {
                 std.debug.print("Unable to allocate memory for line {d} {s}\n",.{self.lineLengths.items.len, err});
             };
         }
     }
 
-    pub fn run(self: Interpreter) void
+    pub fn run(self: *Interpreter) void
     {
         var curr: u32 = 0;
         var brackets: i32 = 0;
@@ -114,7 +114,7 @@ pub const Interpreter = struct
         column: u32,
     };
 
-    fn getFileLocation(self: Interpreter, index: u32) ?FileLocation
+    fn getFileLocation(self: *Interpreter, index: u32) ?FileLocation
     {
         var location = FileLocation{.line=0,.column=index};
 
@@ -141,7 +141,9 @@ const test_allocator = testing.allocator;
 test "Interpreter getFileLocation" {
     const test_str = "abc\ndef\n";
     var test_interpreter = Interpreter.init(test_str, test_allocator);
+    defer test_interpreter.deinit();
     const location = test_interpreter.getFileLocation(0);
+    try testing.expect(location != null);
     try testing.expect(location.?.line == 0);
     try testing.expect(location.?.column == 0);
 }
